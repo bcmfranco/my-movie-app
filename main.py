@@ -1,8 +1,10 @@
-from fastapi import FastAPI, Body, Path, Query
+from fastapi import FastAPI, Body, Path, Query, Request, HTTPException, Depends
 from fastapi.responses import HTMLResponse, JSONResponse
+from fastapi.security.http import HTTPAuthorizationCredentials
 from pydantic import BaseModel, Field
-from typing import Optional, List
-from jwt_manager import create_token
+from typing import Coroutine, Optional, List
+from jwt_manager import create_token, validate_token
+from fastapi.security import HTTPBearer
 
 class User(BaseModel):
     email:str
@@ -13,7 +15,15 @@ app.title = "Bruno app con FastApi"
 app.version = "0.0.0.0.0.1"
 
 # Dejé acá
-# https://platzi.com/new-home/clases/9012-fastapi/67258-validando-tokens/
+# https://platzi.com/new-home/clases/9012-fastapi/67295-sqlalchemy-el-orm-de-fastapi/
+
+class JWTBearer(HTTPBearer):
+    async def __call__(self, request: Request):
+        auth = await super().__call__(request)
+        data = validate_token(auth.credentials)
+        if data['email'] != "mpautassi@codev.com":
+            raise HTTPException(status_code=403, detail="Credenciales inválidas")
+
 
 class Movie(BaseModel):
     id: Optional[int] = None
@@ -60,10 +70,12 @@ def message():
 
 @app.post('/login', tags=['auth'])
 def login(user: User):
-    return user
+    if user.email == "mpautassi@codev.com" and user.password == "123123":
+        token: str = create_token(user.model_dump())
+        return JSONResponse(status_code=200, content=token)
 
 
-@app.get('/movies', tags=['movies'], response_model=List[Movie], status_code=200)
+@app.get('/movies', tags=['movies'], response_model=List[Movie], status_code=200, dependencies=[Depends(JWTBearer())])
 def get_movies() -> List[Movie]:
     return JSONResponse(content=movies)
 
