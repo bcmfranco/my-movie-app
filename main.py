@@ -2,11 +2,15 @@ from fastapi import FastAPI, Body, Path, Query
 from fastapi.responses import HTMLResponse, JSONResponse
 from pydantic import BaseModel, Field
 from typing import Optional, List
+from jwt_manager import create_token
+
+class User(BaseModel):
+    email:str
+    password:str
 
 app = FastAPI()
 app.title = "Bruno app con FastApi"
 app.version = "0.0.0.0.0.1"
-
 
 # Dejé acá
 # https://platzi.com/new-home/clases/9012-fastapi/67258-validando-tokens/
@@ -53,6 +57,10 @@ movies = [
 @app.get('/', tags=['home'])
 def message():
     return HTMLResponse('<h1>Hello world!</h1>')
+
+@app.post('/login', tags=['auth'])
+def login(user: User):
+    return user
 
 
 @app.get('/movies', tags=['movies'], response_model=List[Movie], status_code=200)
