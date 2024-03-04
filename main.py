@@ -5,6 +5,8 @@ from pydantic import BaseModel, Field
 from typing import Coroutine, Optional, List
 from jwt_manager import create_token, validate_token
 from fastapi.security import HTTPBearer
+from config.database import Session, engine, Base
+from models.movie import Movie
 
 class User(BaseModel):
     email:str
@@ -14,8 +16,10 @@ app = FastAPI()
 app.title = "Bruno app con FastApi"
 app.version = "0.0.0.0.0.1"
 
+Base.metadata.create_all(bind = engine)
+
 # Dejé acá
-# https://platzi.com/new-home/clases/9012-fastapi/67295-sqlalchemy-el-orm-de-fastapi/
+# https://platzi.com/new-home/clases/9012-fastapi/67278-registro-de-datos/
 
 class JWTBearer(HTTPBearer):
     async def __call__(self, request: Request):
