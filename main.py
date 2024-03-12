@@ -7,6 +7,7 @@ from jwt_manager import create_token, validate_token
 from fastapi.security import HTTPBearer
 from config.database import Session, engine, Base
 from models.movie import Movie as MovieModel
+from fastapi.encoders import jsonable_encoder
 
 class User(BaseModel):
     email:str
@@ -74,15 +75,18 @@ def message():
 
 @app.post('/login', tags=['auth'])
 def login(user: User):
-    if user.email == "mpautassi@codev.com" and user.password == "123123":
+    if user.email == "mpautassi" and user.password == "123123":
         token: str = create_token(user.model_dump())
         return JSONResponse(status_code=200, content=token)
 
-
+### GET all movies
 @app.get('/movies', tags=['movies'], response_model=List[Movie], status_code=200, dependencies=[Depends(JWTBearer())])
 def get_movies() -> List[Movie]:
-    return JSONResponse(content=movies)
+    db = Session()
+    result = db.query(MovieModel).all()
+    return JSONResponse(content=jsonable_encoder(result))
 
+### GET one movie
 @app.get('/movies/{id}', tags=['movies'], response_model=Movie, status_code=200)
 def get_movie(id: int = Path(ge=1, le=500)) -> Movie:
     for item in movies:
