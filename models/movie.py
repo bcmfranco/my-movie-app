@@ -13,4 +13,3 @@ class Movie(Base):
     category = Column(String)
 
 
-
