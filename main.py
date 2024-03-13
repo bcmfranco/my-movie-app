@@ -25,9 +25,7 @@ Base.metadata.create_all(bind = engine)
 ## Auth token
 # "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJlbWFpbCI6Im1wYXV0YXNzaSIsInBhc3N3b3JkIjoiMTIzMTIzIn0.-VvCSkqah_mnrm0eTo7NzGMLsbyJMAi_HgIus6o8Nng"
 
-## No funciona el get movie all
-## El get movie by id funciona solamente con el id 1
-
+# Tiene que haber al menos dos películas cargadas para que te traiga el get movie, porque busca una lista
 
 class JWTBearer(HTTPBearer):
     async def __call__(self, request: Request):
@@ -39,7 +37,7 @@ class JWTBearer(HTTPBearer):
 
 class Movie(BaseModel):
     id: Optional[int] = None
-    title: str = Field(default="Nueva película", min_length=2, max_length=15)
+    title: str = Field(default="Nueva película", min_length=2, max_length=30)
     overview: str = Field(default="Esta es una reseña de la película", min_length=10, max_length=50)
     year: int = Field(default=2000, le=2025)
     rating: float = Field(default=6.0, ge=0, le=10)
@@ -87,7 +85,8 @@ def login(user: User):
         return JSONResponse(status_code=200, content=token)
 
 ############### GET all movies ##############################
-@app.get('/movies', tags=['movies'], response_model=List[Movie], status_code=200, dependencies=[Depends(JWTBearer())])
+# @app.get('/movies', tags=['movies'], response_model=List[Movie], status_code=200, dependencies=[Depends(JWTBearer())])
+@app.get('/movies', tags=['movies'], response_model=List[Movie], status_code=200)
 def get_movies() -> List[Movie]:
     db = Session()
     result = db.query(MovieModel).all()
