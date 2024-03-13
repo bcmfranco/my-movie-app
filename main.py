@@ -22,9 +22,6 @@ Base.metadata.create_all(bind = engine)
 # Dejé acá
 # https://platzi.com/new-home/clases/9012-fastapi/67277-consulta-de-datos/
 
-## Auth token
-# "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJlbWFpbCI6Im1wYXV0YXNzaSIsInBhc3N3b3JkIjoiMTIzMTIzIn0.-VvCSkqah_mnrm0eTo7NzGMLsbyJMAi_HgIus6o8Nng"
-
 # Tiene que haber al menos dos películas cargadas para que te traiga el get movie, porque busca una lista
 
 class JWTBearer(HTTPBearer):
