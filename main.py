@@ -20,7 +20,14 @@ app.version = "0.0.0.0.0.1"
 Base.metadata.create_all(bind = engine)
 
 # Dejé acá
-# https://platzi.com/new-home/clases/9012-fastapi/67278-registro-de-datos/
+# https://platzi.com/new-home/clases/9012-fastapi/67277-consulta-de-datos/
+
+## Auth token
+# "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJlbWFpbCI6Im1wYXV0YXNzaSIsInBhc3N3b3JkIjoiMTIzMTIzIn0.-VvCSkqah_mnrm0eTo7NzGMLsbyJMAi_HgIus6o8Nng"
+
+## No funciona el get movie all
+## El get movie by id funciona solamente con el id 1
+
 
 class JWTBearer(HTTPBearer):
     async def __call__(self, request: Request):
@@ -79,27 +86,33 @@ def login(user: User):
         token: str = create_token(user.model_dump())
         return JSONResponse(status_code=200, content=token)
 
-### GET all movies
+############### GET all movies ##############################
 @app.get('/movies', tags=['movies'], response_model=List[Movie], status_code=200, dependencies=[Depends(JWTBearer())])
 def get_movies() -> List[Movie]:
     db = Session()
     result = db.query(MovieModel).all()
-    return JSONResponse(content=jsonable_encoder(result))
+    return JSONResponse(status_code=200, content=jsonable_encoder(result))
 
-### GET one movie
+############### GET one movie by id #################################
 @app.get('/movies/{id}', tags=['movies'], response_model=Movie, status_code=200)
-def get_movie(id: int = Path(ge=1, le=500)) -> Movie:
-    for item in movies:
-        if item["id"] == id:
-            return JSONResponse(status_code=200, content=item)
-    return JSONResponse(status_code=404, content=[])
+def get_movie(id: int = Path(ge=1 , le=2000)) -> Movie:
+    db = Session()
+    result = db.query(MovieModel).filter(MovieModel.id == id).first()
 
-@app.get('/movies/', tags=['movies'], response_model=List[Movie], status_code=2000)
-def get_movies_by_category(category: str = Query(min_length=5, max_length=15)) -> List[Movie]:
-    data = [ item for item in movies if item['category'] == category]
-    return JSONResponse(status_code=2000, content=data)
+    if not result:
+        return JSONResponse(status_code=404, content={'message': "No encontrada"})
+    return JSONResponse(status_code=200, content=jsonable_encoder(result))
 
-### POST create_move
+############### GET one movie by category #################################
+@app.get("/movies/", tags=["Movies"])
+def get_movies_by_category(category: str = Query(max_length=50, min_length=3)):
+    db = Session()
+    movies = db.query(MovieModel).filter(MovieModel.category == category).all()
+    if not movies:
+        return {"message": "No existen peliculas con esa categoria"}
+    return movies
+
+############### POST create_move #################################
 @app.post('/movies/', tags=['movies'], response_model=dict, status_code=201)
 def create_movie(movie: Movie) -> dict:
     movies.append(movie)
