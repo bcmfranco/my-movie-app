@@ -1,13 +1,13 @@
 from fastapi import FastAPI, Body, Path, Query, Request, HTTPException, Depends
 from fastapi.responses import HTMLResponse, JSONResponse
-from fastapi.security.http import HTTPAuthorizationCredentials
 from pydantic import BaseModel, Field
 from typing import Coroutine, Optional, List
 from jwt_manager import create_token, validate_token
-from fastapi.security import HTTPBearer
 from config.database import Session, engine, Base
 from models.movie import Movie as MovieModel
 from fastapi.encoders import jsonable_encoder
+from middlewares.error_handler import ErrorHandler
+from middlewares.jwt_bearer import JWTBearer
 
 class User(BaseModel):
     email:str
@@ -17,19 +17,14 @@ app = FastAPI()
 app.title = "Bruno app con FastApi"
 app.version = "0.0.0.0.0.1"
 
+app.add_middleware(ErrorHandler)
+
 Base.metadata.create_all(bind = engine)
 
 # Dejé acá
 # https://platzi.com/new-home/clases/9012-fastapi/67277-consulta-de-datos/
 
 # Tiene que haber al menos dos películas cargadas para que te traiga el get movie, porque busca una lista
-
-class JWTBearer(HTTPBearer):
-    async def __call__(self, request: Request):
-        auth = await super().__call__(request)
-        data = validate_token(auth.credentials)
-        if data['email'] != "mpautassi@codev.com":
-            raise HTTPException(status_code=403, detail="Credenciales inválidas")
 
 
 class Movie(BaseModel):
