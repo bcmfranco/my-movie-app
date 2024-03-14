@@ -89,6 +89,7 @@ def get_movies() -> List[Movie]:
     result = db.query(MovieModel).all()
     return JSONResponse(status_code=200, content=jsonable_encoder(result))
 
+
 ############### GET one movie by id #################################
 @app.get('/movies/{id}', tags=['movies'], response_model=Movie, status_code=200)
 def get_movie(id: int = Path(ge=1 , le=2000)) -> Movie:
@@ -99,14 +100,14 @@ def get_movie(id: int = Path(ge=1 , le=2000)) -> Movie:
         return JSONResponse(status_code=404, content={'message': "No encontrada"})
     return JSONResponse(status_code=200, content=jsonable_encoder(result))
 
+
 ############### GET one movie by category #################################
-@app.get("/movies/", tags=["Movies"])
-def get_movies_by_category(category: str = Query(max_length=50, min_length=3)):
+@app.get("/movies/", tags=["Movies"], response_model=List[Movie])
+def get_movies_by_category(category: str = Query(min_length=5, max_length=15)) -> List[Movie]:
     db = Session()
-    movies = db.query(MovieModel).filter(MovieModel.category == category).all()
-    if not movies:
-        return {"message": "No existen peliculas con esa categoria"}
-    return movies
+    result = db.query(MovieModel).filter(MovieModel.category == category).all()
+    return JSONResponse(status_code=200, content=jsonable_encoder(result))
+
 
 ############### POST create_move #################################
 @app.post('/movies/', tags=['movies'], response_model=dict, status_code=201)
@@ -118,17 +119,23 @@ def create_movie(movie: Movie) -> dict:
     db.commit()
     return JSONResponse(status_code=201, content={'message': "Se ha registrado una nueva película"})
 
+############### PUT create_move #################################
 @app.put('/movies/{id}', tags=['movies'], response_model=dict, status_code=200)
 def update_movie(id: int, movie: Movie) -> dict:
-    for item in movies:
-        if item["id"] == id:
-            item["title"] = movie.title
-            item["overview"] = movie.overview
-            item["year"] = movie.year
-            item["rating"] = movie.rating
-            item["category"] = movie.category
-            return JSONResponse(status_code=200, content={'message': "Se ha modificado exitosamente"})
-    return JSONResponse(status_code=401, content={'message': "No se modificó un carajo"})
+    db = Session()
+    result = db.query(MovieModel).filter(MovieModel.id == id).first()
+
+    if not result:
+        return JSONResponse(status_code=404, content={'message': "No encontrada"})
+
+    result.title = movie.title
+    result.overview = movie.overview
+    result.year = movie.year
+    result.rating = movie.rating
+    result.category = movie.category
+    db.commit()
+
+    return JSONResponse(status_code=401, content={'message': "Se modificó la película"})
 
 @app.delete('/movies/{id}', tags=['movies'], response_model=dict, status_code=200)
 def delete_movie(id: int) -> dict:
