@@ -109,7 +109,7 @@ def get_movies_by_category(category: str = Query(min_length=5, max_length=15)) -
     return JSONResponse(status_code=200, content=jsonable_encoder(result))
 
 
-############### POST create_move #################################
+############### POST create movie #################################
 @app.post('/movies/', tags=['movies'], response_model=dict, status_code=201)
 def create_movie(movie: Movie) -> dict:
     movies.append(movie)
@@ -119,12 +119,11 @@ def create_movie(movie: Movie) -> dict:
     db.commit()
     return JSONResponse(status_code=201, content={'message': "Se ha registrado una nueva película"})
 
-############### PUT create_move #################################
+############### PUT movie #################################
 @app.put('/movies/{id}', tags=['movies'], response_model=dict, status_code=200)
 def update_movie(id: int, movie: Movie) -> dict:
     db = Session()
     result = db.query(MovieModel).filter(MovieModel.id == id).first()
-
     if not result:
         return JSONResponse(status_code=404, content={'message': "No encontrada"})
 
@@ -137,9 +136,16 @@ def update_movie(id: int, movie: Movie) -> dict:
 
     return JSONResponse(status_code=401, content={'message': "Se modificó la película"})
 
+
+############### Delete movie #################################
 @app.delete('/movies/{id}', tags=['movies'], response_model=dict, status_code=200)
 def delete_movie(id: int) -> dict:
-    for item in movies:
-        if item["id"] == id:
-            movies.remove(item)
-            return JSONResponse(status_code=200, content={'message': "Se ha borrado exitosamente"})
+    db = Session()
+    result = db.query(MovieModel).filter(MovieModel.id == id).first()
+    if not result:
+        return JSONResponse(status_code=404, content={'message': "No encontrada"})
+    
+    db.delete(result)
+    db.commit()
+
+    return JSONResponse(status_code=200, content={'message': "Se ha borrado exitosamente"})
